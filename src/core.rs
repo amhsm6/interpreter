@@ -21,7 +21,7 @@ pub trait Cell: Expr {
 pub struct Frame(HashMap<String, Rc<dyn Expr>>);
 
 #[derive(Clone)]
-pub struct Bindings(pub Vec<Frame>);
+pub struct Bindings(pub Vec<Frame>); //FIXME: make field private
 
 impl Bindings {
     pub fn new_frame(&mut self) {
@@ -83,3 +83,6 @@ impl Stmt for Block {
         format!("{{\n{}}}", res)
     }
 }
+
+struct Definition(AddVarStmt);
+type Program = Vec<Definition>;

@@ -1,4 +1,4 @@
-use crate::core::{Stmt, Expr, Cell, Bindings, Block};
+use crate::core::{Expr, Cell, Stmt, Bindings, Block};
 use std::rc::Rc;
 use std::fmt::Write;
 use std::any::Any;
@@ -13,7 +13,7 @@ impl TextExpr {
 
 impl Expr for TextExpr {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(TextExpr(self.0.clone()))
+        Rc::new(TextExpr::new(self.0.clone()))
     }
 
     fn string(&self) -> String {
@@ -24,14 +24,14 @@ impl Expr for TextExpr {
 pub struct IntExpr(pub i128);
 
 impl IntExpr {
-    pub fn new(s: String) -> IntExpr {
-        IntExpr(s.parse().unwrap())
+    pub fn new(n: i128) -> IntExpr {
+        IntExpr(n)
     }
 }
 
 impl Expr for IntExpr {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(IntExpr(self.0))
+        Rc::new(IntExpr::new(self.0))
     }
 
     fn string(&self) -> String {
@@ -49,7 +49,7 @@ impl BoolExpr {
 
 impl Expr for BoolExpr {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(BoolExpr(self.0))
+        Rc::new(BoolExpr::new(self.0))
     }
 
     fn string(&self) -> String {
@@ -58,11 +58,11 @@ impl Expr for BoolExpr {
 }
 
 #[derive(Clone)] //TMP
-pub struct VarExpr(pub String);
+pub struct VarExpr(String);
 
 impl VarExpr {
-    pub fn new(s: String) -> VarExpr {
-        VarExpr(s)
+    pub fn new(name: String) -> VarExpr {
+        VarExpr(name)
     }
 }
 
@@ -88,6 +88,12 @@ pub struct Pointer {
     cell: Rc<dyn Cell>
 }
 
+impl Pointer {
+    pub fn new(bindings: Bindings, cell: Rc<dyn Cell>) -> Pointer {
+        Pointer { bindings, cell }
+    }
+}
+
 impl Expr for Pointer {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
         Rc::new(self.clone())
@@ -102,7 +108,7 @@ pub struct RefExpr<C: Cell + Clone> { //TMP
     cell: C
 }
 
-impl<C: Cell + Clone> RefExpr<C> { //TMP
+impl<C: Cell + Clone> RefExpr<C> {
     pub fn new(cell: C) -> RefExpr<C> {
         RefExpr { cell }
     }
@@ -110,10 +116,10 @@ impl<C: Cell + Clone> RefExpr<C> { //TMP
 
 impl<C: Cell + Clone> Expr for RefExpr<C> { //TMP
     fn value(&self, bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(Pointer {
-            bindings: bindings.clone(),
-            cell: Rc::new(self.cell.clone())
-        })
+        Rc::new(Pointer::new(
+            bindings.clone(),
+            Rc::new(self.cell.clone()) //FIXME: change field to Rc<dyn>
+        ))
     }
 
     fn string(&self) -> String {
@@ -125,7 +131,7 @@ impl<C: Cell + Clone> Expr for RefExpr<C> { //TMP
 pub struct DerefExpr(Pointer);
 
 impl DerefExpr {
-    fn new(pointer: Pointer) -> DerefExpr {
+    pub fn new(pointer: Pointer) -> DerefExpr {
         DerefExpr(pointer)
     }
 }
@@ -151,6 +157,12 @@ pub struct Function {
     name: String,
     args: Vec<String>,
     body: Block
+}
+
+impl Function {
+    pub fn new(name: String, args: Vec<String>, body: Block) -> Function {
+        Function { name, args, body }
+    }
 }
 
 impl Expr for Function {
@@ -179,6 +191,12 @@ impl Expr for Function {
 pub struct Builtin {
     name: String,
     body: fn()
+}
+
+impl Builtin {
+    pub fn new(name: String, body: fn()) -> Builtin {
+        Builtin { name, body }
+    }
 }
 
 impl Expr for Builtin {
@@ -217,7 +235,7 @@ impl<F: Expr> Expr for CallExpr<F> {
 
         let builtin = (self.expr.value(bindings) as Rc<dyn Any>).downcast::<Builtin>();
 
-        if let Ok(builtin) = builtin {
+        if let Ok(_builtin) = builtin {
 
         }
 
