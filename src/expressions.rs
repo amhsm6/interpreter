@@ -226,10 +226,14 @@ impl<F: Expr> Expr for CallExpr<F> {
 
         if let Ok(function) = function {
             let mut function_bindings = Bindings(vec![bindings.0[0].clone()]);
+            
+            for i in 0..self.args.len() {
+                function_bindings.add(function.args[i].clone(), Rc::clone(&self.args[i]));
+            }
 
             function.body.execute(&mut function_bindings);
             bindings.0[0] = function_bindings.0[0].clone();
-            
+
             return function_bindings.get(&function.name);
         }
 

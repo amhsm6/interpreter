@@ -1,3 +1,4 @@
+use crate::statements::AddVarStmt;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::fmt::Write;
@@ -20,12 +21,22 @@ pub trait Cell: Expr {
 #[derive(Clone)]
 pub struct Frame(HashMap<String, Rc<dyn Expr>>);
 
+impl Frame {
+    pub fn new() -> Frame {
+        Frame(HashMap::new())
+    }
+}
+
 #[derive(Clone)]
 pub struct Bindings(pub Vec<Frame>); //FIXME: make field private
 
 impl Bindings {
+    pub fn new(frames: Vec<Frame>) -> Bindings {
+        Bindings(frames)
+    }
+
     pub fn new_frame(&mut self) {
-        self.0.push(Frame(HashMap::new()));
+        self.0.push(Frame::new());
     }
 
     pub fn add(&mut self, name: String, expr: Rc<dyn Expr>) {
@@ -63,6 +74,12 @@ impl Bindings {
 #[derive(Clone)] //TMP
 pub struct Block(Vec<Rc<dyn Stmt>>);
 
+impl Block {
+    pub fn new(statements: Vec<Rc<dyn Stmt>>) -> Block {
+        Block(statements)
+    }
+}
+
 impl Stmt for Block {
     fn execute(&self, bindings: &mut Bindings) {
         bindings.new_frame();
@@ -84,5 +101,39 @@ impl Stmt for Block {
     }
 }
 
-struct Definition(AddVarStmt);
-type Program = Vec<Definition>;
+pub struct Definition<E: Expr>(AddVarStmt<E>);
+
+impl<E: Expr> Definition<E> {
+    pub fn new(statement: AddVarStmt<E>) -> Definition<E> {
+        Definition(statement)
+    }
+}
+
+impl<E: Expr> Stmt for Definition<E> {
+    fn execute(&self, bindings: &mut Bindings) {
+        self.0.execute(bindings)
+    }
+
+    fn string(&self) -> String {
+        format!("DEFINE {}", self.0.string())
+    }
+}
+
+pub struct Program {
+    bindings: Bindings,
+    prog: Vec<Definition<>>
+}
+
+impl Program {
+    pub fn new() -> Program {
+        let mut bindings = Bindings::new(Vec::new());
+
+        bindings.add("print");
+
+        Program { bindings, prog: Vec::new() }
+    }
+
+    pub fn add(&mut self, def: Definition<dyn Expr>) {
+        self.0.push(def);
+    }
+}

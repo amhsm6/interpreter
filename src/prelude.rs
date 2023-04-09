@@ -1,4 +1,5 @@
 pub use crate::core::{Expr, Cell, Stmt};
+use crate::core::{Block, Definition};
 use crate::expressions::*;
 use crate::statements::*;
 use crate::operations::*;
@@ -42,6 +43,14 @@ pub fn change<C: Cell, E: Expr>(cell: C, expr: E) -> ChangeStmt<C, E> {
 
 pub fn eval<E: Expr>(expr: E) -> EvalStmt<E> {
     EvalStmt::new(expr)
+}
+
+pub fn r#const<E: Expr>(name: String, expr: E) -> Definition<E> {
+    Definition::new(add_var(name, expr))
+}
+
+pub fn define(name: String, args: Vec<String>, body: Vec<Rc<dyn Stmt>>) -> Definition<Function> {
+    Definition::new(add_var(name.clone(), Function::new(name, args, Block::new(body))))
 }
 
 pub fn add<Lhs: Expr, Rhs: Expr>(x: Lhs, y: Rhs) -> AddExpr<Lhs, Rhs> {
