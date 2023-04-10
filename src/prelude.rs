@@ -45,12 +45,17 @@ pub fn eval<E: Expr>(expr: E) -> EvalStmt<E> {
     EvalStmt::new(expr)
 }
 
-pub fn r#const<E: Expr>(name: String, expr: E) -> Definition<E> {
+pub fn r#const<E: Expr>(name: String, expr: E) -> Definition {
     Definition::new(add_var(name, expr))
 }
 
-pub fn define(name: String, args: Vec<String>, body: Vec<Rc<dyn Stmt>>) -> Definition<Function> {
-    Definition::new(add_var(name.clone(), Function::new(name, args, Block::new(body))))
+pub fn define(name: String, args: Vec<String>, body: Vec<Rc<dyn Stmt>>) -> Definition {
+    Definition::new(
+        add_var(
+            name.clone(),
+            Function::new(name, args, Block::new(body))
+        )
+    )
 }
 
 pub fn add<Lhs: Expr, Rhs: Expr>(x: Lhs, y: Rhs) -> AddExpr<Lhs, Rhs> {

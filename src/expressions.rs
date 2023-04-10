@@ -57,7 +57,7 @@ impl Expr for BoolExpr {
     }
 }
 
-#[derive(Clone)] //TMP
+#[derive(Clone)] //TMP0
 pub struct VarExpr(String);
 
 impl VarExpr {
@@ -104,7 +104,7 @@ impl Expr for Pointer {
     }
 }
 
-pub struct RefExpr<C: Cell + Clone> { //TMP
+pub struct RefExpr<C: Cell + Clone> { //TMP0
     cell: C
 }
 
@@ -114,11 +114,11 @@ impl<C: Cell + Clone> RefExpr<C> {
     }
 }
 
-impl<C: Cell + Clone> Expr for RefExpr<C> { //TMP
+impl<C: Cell + Clone> Expr for RefExpr<C> { //TMP0
     fn value(&self, bindings: &mut Bindings) -> Rc<dyn Expr> {
         Rc::new(Pointer::new(
             bindings.clone(),
-            Rc::new(self.cell.clone()) //FIXME: change field to Rc<dyn>
+            Rc::new(self.cell.clone()) //FIXME: change field to Rc<dyn> !0
         ))
     }
 
@@ -127,7 +127,7 @@ impl<C: Cell + Clone> Expr for RefExpr<C> { //TMP
     }
 }
 
-#[derive(Clone)] //TMP
+#[derive(Clone)] //TMP0
 pub struct DerefExpr(Pointer);
 
 impl DerefExpr {
@@ -152,7 +152,7 @@ impl Cell for DerefExpr {
     }
 }
 
-#[derive(Clone)] //TMP
+#[derive(Clone)] //TMP1
 pub struct Function {
     name: String,
     args: Vec<String>,
@@ -167,7 +167,7 @@ impl Function {
 
 impl Expr for Function {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(self.clone())
+        Rc::new(self.clone()) // !1
     }
 
     fn string(&self) -> String {
@@ -187,7 +187,7 @@ impl Expr for Function {
     }
 }
 
-#[derive(Clone)] //TMP
+#[derive(Clone)] //TMP1
 pub struct Builtin {
     name: String,
     body: fn()
@@ -201,7 +201,7 @@ impl Builtin {
 
 impl Expr for Builtin {
     fn value(&self, _bindings: &mut Bindings) -> Rc<dyn Expr> {
-        Rc::new(self.clone())
+        Rc::new(self.clone()) // !1
     }
 
     fn string(&self) -> String {
@@ -225,7 +225,7 @@ impl<F: Expr> Expr for CallExpr<F> {
         let function = (self.expr.value(bindings) as Rc<dyn Any>).downcast::<Function>();
 
         if let Ok(function) = function {
-            let mut function_bindings = Bindings(vec![bindings.0[0].clone()]);
+            let mut function_bindings = Bindings::new(vec![bindings.0[0].clone()]);
             
             for i in 0..self.args.len() {
                 function_bindings.add(function.args[i].clone(), Rc::clone(&self.args[i]));

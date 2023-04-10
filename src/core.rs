@@ -71,7 +71,7 @@ impl Bindings {
     }
 }
 
-#[derive(Clone)] //TMP
+#[derive(Clone)] //TMP1
 pub struct Block(Vec<Rc<dyn Stmt>>);
 
 impl Block {
@@ -101,15 +101,15 @@ impl Stmt for Block {
     }
 }
 
-pub struct Definition<E: Expr>(AddVarStmt<E>);
+pub struct Definition(Rc<dyn Stmt>); //FIXME: add a generic
 
-impl<E: Expr> Definition<E> {
-    pub fn new(statement: AddVarStmt<E>) -> Definition<E> {
-        Definition(statement)
+impl Definition {
+    pub fn new<E: Expr>(statement: AddVarStmt<E>) -> Definition {
+        Definition(Rc::new(statement))
     }
 }
 
-impl<E: Expr> Stmt for Definition<E> {
+impl Stmt for Definition {
     fn execute(&self, bindings: &mut Bindings) {
         self.0.execute(bindings)
     }
@@ -121,19 +121,19 @@ impl<E: Expr> Stmt for Definition<E> {
 
 pub struct Program {
     bindings: Bindings,
-    prog: Vec<Definition<>>
+    prog: Vec<Definition>
 }
 
 impl Program {
     pub fn new() -> Program {
         let mut bindings = Bindings::new(Vec::new());
 
-        bindings.add("print");
+        //bindings.add("print");
 
         Program { bindings, prog: Vec::new() }
     }
 
-    pub fn add(&mut self, def: Definition<dyn Expr>) {
-        self.0.push(def);
+    pub fn add(&mut self, def: Definition) {
+        self.prog.push(def);
     }
 }
