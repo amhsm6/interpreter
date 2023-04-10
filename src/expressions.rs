@@ -190,11 +190,11 @@ impl Expr for Function {
 #[derive(Clone)] //TMP1
 pub struct Builtin {
     name: String,
-    body: fn()
+    body: fn(String)
 }
 
 impl Builtin {
-    pub fn new(name: String, body: fn()) -> Builtin {
+    pub fn new(name: String, body: fn(String)) -> Builtin {
         Builtin { name, body }
     }
 }
@@ -239,8 +239,11 @@ impl<F: Expr> Expr for CallExpr<F> {
 
         let builtin = (self.expr.value(bindings) as Rc<dyn Any>).downcast::<Builtin>();
 
-        if let Ok(_builtin) = builtin {
+        if let Ok(builtin) = builtin {
+            let arg = (Rc::clone(&self.args[0]) as Rc<dyn Any>).downcast::<TextExpr>().unwrap();
+            (builtin.body)(arg.0.clone());
 
+            return Rc::new(IntExpr::new(0));
         }
 
         panic!("NOT A FUNCTION");

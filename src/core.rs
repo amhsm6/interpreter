@@ -1,3 +1,4 @@
+use crate::expressions::{Function, Builtin, CallExpr};
 use crate::statements::AddVarStmt;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -42,7 +43,7 @@ impl Bindings {
     pub fn add(&mut self, name: String, expr: Rc<dyn Expr>) {
         let last_frame = self.0.last_mut().unwrap();
 
-        if !last_frame.0.contains_key(&name) {
+        if last_frame.0.contains_key(&name) {
             panic!("VARIABLE {} ALREADY PRESENT", name);
         }
 
@@ -127,13 +128,31 @@ pub struct Program {
 impl Program {
     pub fn new() -> Program {
         let mut bindings = Bindings::new(Vec::new());
+        bindings.new_frame();
 
-        //bindings.add("print");
+        bindings.add(
+            "print".to_string(),
+            Rc::new(Builtin::new(
+                "print".to_string(),
+                |x| println!("{}", x)
+            ))
+        );
 
         Program { bindings, prog: Vec::new() }
     }
 
     pub fn add(&mut self, def: Definition) {
         self.prog.push(def);
+    }
+
+    pub fn run(&mut self) {
+        for stmt in &self.prog {
+            stmt.execute(&mut self.bindings);
+        }
+
+        let main = self.bindings.get("main");
+        let main = (main as Rc<dyn Any>).downcast::<Function>().unwrap();
+
+        CallExpr::new((*main).clone(), Vec::new()).value(&mut self.bindings);
     }
 }

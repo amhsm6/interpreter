@@ -1,15 +1,15 @@
-pub use crate::core::{Expr, Cell, Stmt};
+pub use crate::core::{Expr, Cell, Stmt, Program};
 use crate::core::{Block, Definition};
 use crate::expressions::*;
 use crate::statements::*;
 use crate::operations::*;
 use std::rc::Rc;
 
-pub fn text(s: String) -> TextExpr {
-    TextExpr::new(s)
+pub fn text(s: &str) -> TextExpr {
+    TextExpr::new(s.to_string())
 }
 
-pub fn int(s: String) -> IntExpr {
+pub fn int(s: &str) -> IntExpr {
     IntExpr::new(s.parse().unwrap())
 }
 
@@ -17,8 +17,8 @@ pub fn bool(b: bool) -> BoolExpr {
     BoolExpr::new(b)
 }
 
-pub fn var(s: String) -> VarExpr {
-    VarExpr::new(s)
+pub fn var(s: &str) -> VarExpr {
+    VarExpr::new(s.to_string())
 }
 
 pub fn r#ref<C: Cell + Clone>(cell: C) -> RefExpr<C> {
@@ -33,8 +33,8 @@ pub fn call<F: Expr>(expr: F, args: Vec<Rc<dyn Expr>>) -> CallExpr<F> {
     CallExpr::new(expr, args)
 }
 
-pub fn add_var<E: Expr>(name: String, expr: E) -> AddVarStmt<E> {
-    AddVarStmt::new(VarExpr::new(name), expr)
+pub fn add_var<E: Expr>(name: &str, expr: E) -> AddVarStmt<E> {
+    AddVarStmt::new(VarExpr::new(name.to_string()), expr)
 }
 
 pub fn change<C: Cell, E: Expr>(cell: C, expr: E) -> ChangeStmt<C, E> {
@@ -45,15 +45,21 @@ pub fn eval<E: Expr>(expr: E) -> EvalStmt<E> {
     EvalStmt::new(expr)
 }
 
-pub fn r#const<E: Expr>(name: String, expr: E) -> Definition {
+pub fn r#const<E: Expr>(name: &str, expr: E) -> Definition {
     Definition::new(add_var(name, expr))
 }
 
-pub fn define(name: String, args: Vec<String>, body: Vec<Rc<dyn Stmt>>) -> Definition {
+pub fn define(name: &str, args: Vec<&str>, body: Vec<Rc<dyn Stmt>>) -> Definition {
     Definition::new(
         add_var(
-            name.clone(),
-            Function::new(name, args, Block::new(body))
+            name,
+            Function::new(
+                name.to_string(),
+                args.into_iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<_>>(),
+                Block::new(body)
+            )
         )
     )
 }
