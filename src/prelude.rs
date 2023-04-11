@@ -29,8 +29,8 @@ pub fn deref(pointer: Pointer) -> DerefExpr {
     DerefExpr::new(pointer)
 }
 
-pub fn call<F: Expr>(expr: F, args: Vec<Rc<dyn Expr>>) -> CallExpr<F> {
-    CallExpr::new(expr, args)
+pub fn call<F: Expr>(expr: F, args: &[Rc<dyn Expr>]) -> CallExpr<F> {
+    CallExpr::new(expr, args.to_vec())
 }
 
 pub fn add_var<E: Expr>(name: &str, expr: E) -> AddVarStmt<E> {
@@ -49,7 +49,7 @@ pub fn r#const<E: Expr>(name: &str, expr: E) -> Definition {
     Definition::new(add_var(name, expr))
 }
 
-pub fn define(name: &str, args: Vec<&str>, body: Vec<Rc<dyn Stmt>>) -> Definition {
+pub fn define(name: &str, args: &[&str], body: &[Rc<dyn Stmt>]) -> Definition {
     Definition::new(
         add_var(
             name,
@@ -58,7 +58,7 @@ pub fn define(name: &str, args: Vec<&str>, body: Vec<Rc<dyn Stmt>>) -> Definitio
                 args.into_iter()
                     .map(|x| x.to_string())
                     .collect::<Vec<_>>(),
-                Block::new(body)
+                Block::new(body.to_vec())
             )
         )
     )

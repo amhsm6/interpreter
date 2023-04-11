@@ -29,11 +29,15 @@ impl Frame {
 }
 
 #[derive(Clone)]
-pub struct Bindings(pub Vec<Frame>); //FIXME: make field private
+pub struct Bindings(Vec<Frame>);
 
 impl Bindings {
-    pub fn new(frames: Vec<Frame>) -> Bindings {
-        Bindings(frames)
+    pub fn new() -> Bindings {
+        Bindings(Vec::new())
+    }
+
+    pub fn new_with_globals(&self) -> Bindings {
+        Bindings(vec![self.0[0].clone()])
     }
 
     pub fn new_frame(&mut self) {
@@ -127,7 +131,7 @@ pub struct Program {
 
 impl Program {
     pub fn new() -> Program {
-        let mut bindings = Bindings::new(Vec::new());
+        let mut bindings = Bindings::new();
         bindings.new_frame();
 
         bindings.add(

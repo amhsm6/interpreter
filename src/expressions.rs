@@ -148,7 +148,7 @@ impl Expr for DerefExpr {
 
 impl Cell for DerefExpr {
     fn change(&self, bindings: &mut Bindings, expr: Rc<dyn Expr>) {
-        self.0.cell.change(bindings, expr)
+        self.0.cell.change(bindings, expr) //FIXME: use self.0.bindings
     }
 }
 
@@ -188,7 +188,7 @@ impl Expr for Function {
 }
 
 #[derive(Clone)] //TMP1
-pub struct Builtin {
+pub struct Builtin { //TODO
     name: String,
     body: fn(String)
 }
@@ -225,14 +225,14 @@ impl<F: Expr> Expr for CallExpr<F> {
         let function = (self.expr.value(bindings) as Rc<dyn Any>).downcast::<Function>();
 
         if let Ok(function) = function {
-            let mut function_bindings = Bindings::new(vec![bindings.0[0].clone()]);
+            let mut function_bindings = bindings.new_with_globals();
             
+            function_bindings.new_frame();
             for i in 0..self.args.len() {
-                function_bindings.add(function.args[i].clone(), Rc::clone(&self.args[i]));
+                function_bindings.add(function.args[i].clone(), self.args[i].value(bindings));
             }
 
             function.body.execute(&mut function_bindings);
-            bindings.0[0] = function_bindings.0[0].clone();
 
             return function_bindings.get(&function.name);
         }
@@ -240,8 +240,8 @@ impl<F: Expr> Expr for CallExpr<F> {
         let builtin = (self.expr.value(bindings) as Rc<dyn Any>).downcast::<Builtin>();
 
         if let Ok(builtin) = builtin {
-            let arg = (Rc::clone(&self.args[0]) as Rc<dyn Any>).downcast::<TextExpr>().unwrap();
-            (builtin.body)(arg.0.clone());
+            let arg = (self.args[0].value(bindings) as Rc<dyn Any>).downcast::<IntExpr>().unwrap();
+            (builtin.body)(format!("{}", arg.0));
 
             return Rc::new(IntExpr::new(0));
         }
